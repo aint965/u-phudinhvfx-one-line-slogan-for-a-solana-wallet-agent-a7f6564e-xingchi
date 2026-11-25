@@ -14,5 +14,27 @@ const SLOGAN =
 // with no override the program always writes to /output/entry.txt.
 const OUTPUT_PATH = process.env.ENTRY_OUTPUT ?? "/output/entry.txt";
 
+// Runtime self-check: the gate requires UTF-8 text of 1–140 characters,
+// not only whitespace, a single line, and at most 20 words. Fail loudly
+// instead of writing an entry the gate would refuse.
+const wordCount = SLOGAN.trim().split(/\s+/).filter(Boolean).length;
+const failures: string[] = [];
+if (SLOGAN.length < 1 || SLOGAN.length > 140) {
+  failures.push(`length ${SLOGAN.length} characters (must be 1–140)`);
+}
+if (SLOGAN.trim().length === 0) {
+  failures.push("slogan is only whitespace");
+}
+if (SLOGAN.includes("\n") || SLOGAN.includes("\r")) {
+  failures.push("slogan spans more than one line");
+}
+if (wordCount > 20) {
+  failures.push(`${wordCount} words (must be at most 20)`);
+}
+if (failures.length > 0) {
+  console.error(`Self-check failed: ${failures.join("; ")}`);
+  process.exit(1);
+}
+
 mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
 writeFileSync(OUTPUT_PATH, SLOGAN, "utf8");
